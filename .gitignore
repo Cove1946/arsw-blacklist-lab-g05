@@ -1,0 +1,50 @@
+# Maven build output
+target/
+
+# Compiled Java files
+*.class
+
+# Log files
+*.log
+
+# Java crash logs
+hs_err_pid*
+replay_pid*
+
+# BlueJ
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Packaged artifacts
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Temporary files
+*.tmp
+*.swp
+*~
