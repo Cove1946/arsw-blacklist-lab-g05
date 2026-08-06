@@ -2,6 +2,8 @@ package edu.eci.arsw.blacklist;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Laboratory implementation: students must complete this class.
@@ -25,6 +27,9 @@ public final class FixedPoolBlackListSearch implements BlackListSearch {
         if (alarmThreshold <= 0) {
             throw new IllegalArgumentException("alarmThreshold must be greater than zero");
         }
+
+        long startedAd = System.nanoTime();
+        ExecutorService executor = Executors.newFixedThreadPool(poolSize);
 
         throw new UnsupportedOperationException(
                 "TODO: implement with ExecutorService and a fixed-size thread pool of " + poolSize);
