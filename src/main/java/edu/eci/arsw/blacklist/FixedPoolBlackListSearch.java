@@ -1,9 +1,12 @@
 package edu.eci.arsw.blacklist;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Laboratory implementation: students must complete this class.
@@ -30,6 +33,12 @@ public final class FixedPoolBlackListSearch implements BlackListSearch {
 
         long startedAd = System.nanoTime();
         ExecutorService executor = Executors.newFixedThreadPool(poolSize);
+
+        List<Future<Integer>> futures = new ArrayList<>(providers.size());
+        for (BlackListProvider provider : providers) {
+            Callable<Integer> task = () -> provider.isBlacklisted(ipAddress) ? provider.id() : null;
+            futures.add(executor.submit(task));
+        }
 
         throw new UnsupportedOperationException(
                 "TODO: implement with ExecutorService and a fixed-size thread pool of " + poolSize);
