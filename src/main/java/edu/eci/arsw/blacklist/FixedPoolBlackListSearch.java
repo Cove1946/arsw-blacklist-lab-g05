@@ -40,6 +40,16 @@ public final class FixedPoolBlackListSearch implements BlackListSearch {
             futures.add(executor.submit(task));
         }
 
+        List<Integer> matches = new ArrayList<>();
+        int consulted = 0;
+        for (Future<Integer> future : futures) {
+            Integer matchedId = future.get();
+            consulted++;
+            if (matchedId != null) {
+                matches.add(matchedId);
+            }
+        }
+
         throw new UnsupportedOperationException(
                 "TODO: implement with ExecutorService and a fixed-size thread pool of " + poolSize);
     }
