@@ -20,6 +20,12 @@ public final class FixedPoolBlackListSearch implements BlackListSearch {
 
     @Override
     public SearchResult search(String ipAddress, int alarmThreshold) {
+
+        Objects.requireNonNull(ipAddress, "ipAddress");
+        if (alarmThreshold <= 0) {
+            throw new IllegalArgumentException("alarmThreshold must be greater than zero");
+        }
+
         throw new UnsupportedOperationException(
                 "TODO: implement with ExecutorService and a fixed-size thread pool of " + poolSize);
     }
