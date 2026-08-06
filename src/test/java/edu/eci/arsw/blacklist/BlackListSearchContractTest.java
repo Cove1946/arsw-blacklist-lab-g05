@@ -2,6 +2,7 @@ package edu.eci.arsw.blacklist;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,5 +34,13 @@ class BlackListSearchContractTest {
         SearchResult result = search.search(IP_ADDRESS, ALARM_THRESHOLD);
 
         assertEquals(PROVIDER_COUNT, result.consultedProviders());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("strategies")
+    void shouldNotReportDuplicatedProviderIds(String strategyName, BlackListSearch search) {
+        List<Integer> matches = search.search(IP_ADDRESS, ALARM_THRESHOLD).matchingProviderIds();
+
+        assertEquals(matches.size(), new HashSet<>(matches).size(), () -> "duplicated ids in " + matches);
     }
 }
