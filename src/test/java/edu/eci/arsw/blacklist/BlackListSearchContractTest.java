@@ -43,4 +43,12 @@ class BlackListSearchContractTest {
 
         assertEquals(matches.size(), new HashSet<>(matches).size(), () -> "duplicated ids in " + matches);
     }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("strategies")
+    void shouldReportProviderIdsInAscendingOrder(String strategyName, BlackListSearch search) {
+        List<Integer> matches = search.search(IP_ADDRESS, ALARM_THRESHOLD).matchingProviderIds();
+
+        assertEquals(matches.stream().sorted().toList(), matches);
+    }
 }
