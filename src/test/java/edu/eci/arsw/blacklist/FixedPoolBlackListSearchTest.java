@@ -26,4 +26,11 @@ class FixedPoolBlackListSearchTest {
 
         assertEquals(baseline.matchingProviderIds(), result.matchingProviderIds());
     }
+
+    @Test
+    void poolOfEightShouldReturnSameProviderIdsAsSequentialBaseline() {
+        SearchResult result = new FixedPoolBlackListSearch(providers, 8).search(IP_ADDRESS, ALARM_THRESHOLD);
+
+        assertEquals(baseline.matchingProviderIds(), result.matchingProviderIds());
+    }
 }
