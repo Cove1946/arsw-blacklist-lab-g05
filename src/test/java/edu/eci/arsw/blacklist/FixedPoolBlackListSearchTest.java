@@ -1,9 +1,12 @@
 package edu.eci.arsw.blacklist;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class FixedPoolBlackListSearchTest {
     private static final String IP_ADDRESS = "202.24.34.55";
@@ -32,5 +35,11 @@ class FixedPoolBlackListSearchTest {
         SearchResult result = new FixedPoolBlackListSearch(providers, 8).search(IP_ADDRESS, ALARM_THRESHOLD);
 
         assertEquals(baseline.matchingProviderIds(), result.matchingProviderIds());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1, Integer.MIN_VALUE})
+    void shouldRejectNonPositivePoolSize(int poolSize) {
+        assertThrows(IllegalArgumentException.class, () -> new FixedPoolBlackListSearch(providers, poolSize));
     }
 }
