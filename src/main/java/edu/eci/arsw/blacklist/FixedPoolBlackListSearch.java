@@ -3,10 +3,7 @@ package edu.eci.arsw.blacklist;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 /**
  * Laboratory implementation: students must complete this class.
@@ -42,12 +39,19 @@ public final class FixedPoolBlackListSearch implements BlackListSearch {
 
         List<Integer> matches = new ArrayList<>();
         int consulted = 0;
-        for (Future<Integer> future : futures) {
-            Integer matchedId = future.get();
-            consulted++;
-            if (matchedId != null) {
-                matches.add(matchedId);
+        try {
+            for (Future<Integer> future : futures) {
+                Integer matchedId = future.get();
+                consulted++;
+                if (matchedId != null) {
+                    matches.add(matchedId);
+                }
             }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Search was interrupted while waiting for providers", ex);
+        } catch (ExecutionException ex) {
+            throw new IllegalStateException("Provider consultation failed", ex.getCause());
         }
 
         throw new UnsupportedOperationException(
