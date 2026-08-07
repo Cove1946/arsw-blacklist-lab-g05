@@ -501,8 +501,8 @@ Answer every question with evidence from the experiment.
 
 4. Why should performance not be compared before proving functional equivalence?
 
-   RTA:
-
+   RTA: Primero era importante comprobar que todas las estrategias dieran el mismo resultado correcto. No tendría sentido decir que una es más rápida si al mismo tiempo tiene errores de concurrencia, porque aunque se ejecute en menos tiempo, el resultado no sería confiable
+   
 
 ### 15.2 Fixed thread pool
 
