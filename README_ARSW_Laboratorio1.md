@@ -445,16 +445,16 @@ Complete this table with actual measurements:
 
 | Scenario | Strategy | Pool size | Average ms | Minimum ms | Maximum ms | Speedup | Matches | Consulted |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| No simulated I/O | Sequential | — | Pending | Pending | Pending | 1.00 | Pending | Pending |
-| No simulated I/O | Fixed pool | 2 | Pending | Pending | Pending | Pending | Pending | Pending |
-| No simulated I/O | Fixed pool | 4 | Pending | Pending | Pending | Pending | Pending | Pending |
-| No simulated I/O | Fixed pool | 8 | Pending | Pending | Pending | Pending | Pending | Pending |
-| No simulated I/O | Virtual threads | — | Pending | Pending | Pending | Pending | Pending | Pending |
-| Simulated I/O | Sequential | — | Pending | Pending | Pending | 1.00 | Pending | Pending |
-| Simulated I/O | Fixed pool | 2 | Pending | Pending | Pending | Pending | Pending | Pending |
-| Simulated I/O | Fixed pool | 4 | Pending | Pending | Pending | Pending | Pending | Pending |
-| Simulated I/O | Fixed pool | 8 | Pending | Pending | Pending | Pending | Pending | Pending |
-| Simulated I/O | Virtual threads | — | Pending | Pending | Pending | Pending | Pending | Pending |
+| No simulated I/O | Sequential | — | 0.020 | 0.014 | 0.029 | 1.00 | 7 | 100 |
+| No simulated I/O | Fixed pool | 2 | 0.505 | 0.380 | 0.668 | 0.04 | 7 | 100 |
+| No simulated I/O | Fixed pool | 4 | 0.566 | 0.473 | 0.650 | 0.04 | 7 | 100 |
+| No simulated I/O | Fixed pool | 8 | 1.223 | 0.663 | 2.824 | 0.02 | 7 | 100 |
+| No simulated I/O | Virtual threads | — | 0.721 | 0.464 | 0.905 | 0.03 | 7 | 100 |
+| Simulated I/O | Sequential | — | 11124.252 | 11020.956 | 11500.182 | 1.00 | 7 | 100 |
+| Simulated I/O | Fixed pool | 2 | 5597.677 | 5504.754 | 5846.998 | 1.99 | 7 | 100 |
+| Simulated I/O | Fixed pool | 4 | 3006.012 | 2993.078 | 3018.336 | 3.70 | 7 | 100 |
+| Simulated I/O | Fixed pool | 8 | 1558.112 | 1550.568 | 1562.532 | 7.14 | 7 | 100 |
+| Simulated I/O | Virtual threads | — | 199.278 | 198.660 | 200.603 | 55.82 | 7 | 100 |
 
 Also include the raw measurements in:
 
@@ -589,13 +589,16 @@ Complete:
 
 | Item | Value |
 |---|---|
-| Operating system | Pending |
-| CPU model | Pending |
-| Logical processors | Pending |
-| RAM | Pending |
-| JDK vendor and version | Pending |
-| Maven version | Pending |
-| Measurement date | Pending |
+| Operating system | Microsoft Windows 11 Home Single Language 64-bit (Build 26200) |
+| CPU model | AMD Ryzen 7 7730U with Radeon Graphics |
+| Logical processors | 16 (8 physical cores) |
+| RAM | 15.34 GB |
+| JDK vendor and version | Oracle Corporation, JDK 21.0.9+7-LTS |
+| Maven version | Apache Maven 3.9.12 |
+| Measurement date | 2026-08-07 |
+
+See [results/environment.md](results/environment.md) for full methodology notes and the exact
+commands used, and [results/results.csv](results/results.csv) for the raw per-run measurements.
 
 ---
 
