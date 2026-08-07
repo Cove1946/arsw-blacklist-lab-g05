@@ -497,7 +497,7 @@ Answer every question with evidence from the experiment.
 
 3. What mechanism or design prevented lost or duplicated matches?
 
-   RTA:
+   - RTA: Para evitar las perdidas y duplicados, se elimino el estado mutable compartido donde cada proveedor se encapsula en una tarea independiente cuyo Callable devuelve su propio resultado, asi ningun hilo escribe sobre una coleccion comun evitando asi alguna condicion de carrera. La consolidacion ocurre en un solo hilo el cual invoca serch() leyendo cada future exactamente una vez con get(), al ser una relacion 1 a 1  (proveedor → tarea → Future)  se recorren todos y no se puede omitir o duplicar ninguno. 
 
 4. Why should performance not be compared before proving functional equivalence?
 
