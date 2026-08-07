@@ -481,9 +481,28 @@ Answer every question with evidence from the experiment.
 ### 15.1 Correctness
 
 1. How did the team verify that the three strategies produce equivalent results?
+
+   RTA: Nosotros hicimos la verficaciones mediante pruebas automatizadas donde la respuesta base es la estrategia SEQUENTIAL, donde se prueba la misma IP, warmups y measuredRuns finalmente comparando las respuestas. Tambien, se hicieron 50 ejecuciones medidas que se registraron en results/results.csv.
+
+   ![Results](docs/Results.png)
+   ![Test](docs/Test.png)
+
 2. Why can concurrent tasks return matches in a different order?
+
+   RTA: Para responder esta pregunta es importante distinguir entre dos conceptos: el orden de finalizacion es no deterministico por naturaleza, per el orde de recoleccion es una decision de diseño. Ambas implementaciones concurrentes cosechan los resultados recorriendo los Future en el orden en que se enviaron las tareas e invokeAl;l garantiza por contrato que devuelve los futures en el orden de la coleccion de entrada, de este modo, la variabilidad de finalizacion queda contenida dentro del executor.
+
+   ![Sequential](docs/Sequential.png)
+   ![Fixed](docs/Fixed.png)
+   ![Virtual](docs/Virtual.png)
+
 3. What mechanism or design prevented lost or duplicated matches?
+
+   RTA:
+
 4. Why should performance not be compared before proving functional equivalence?
+
+   RTA:
+
 
 ### 15.2 Fixed thread pool
 
