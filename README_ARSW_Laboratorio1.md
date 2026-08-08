@@ -515,9 +515,22 @@ Answer every question with evidence from the experiment.
 ### 15.3 Virtual threads
 
 10. In which scenario did virtual threads provide the clearest benefit?
+
+   RTA: En el escenario en el que vimos mas claro el beneficio de usar los virtual threads fue al hacer las 50 ejecuciones, en results/results.md donde los virtual threads promediaron 199,278ms frente a 11.124,252ms de la estrategia secuencial y frente a 1.588,112ms del mejor pool fijo (8 hilos).
+
+   
+
 11. Why are virtual threads especially relevant for blocking operations?
+
+   RTA: Porque un virtual thread bloqueado no retiene un hilo del sistema operativo. Cuando ejecuta una operación bloqueante instrumentada por la JVM (Thread.sleep, I/O de red, esperas de socket), la JVM copia su pila al heap y lo desmonta de su carrier thread, dejando ese hilo plataforma libre para ejecutar otra tarea. Cuando la espera termina, el virtual thread se remonta sobre cualquier carrier disponible y continúa.
+
 12. Why do virtual threads not make local CPU work automatically faster?
+
+   RTA: Los virtual threads no hacen que el trabajo local de CPU sea automáticamente más rápido porque no aumentan la capacidad de procesamiento del CPU. Los virtual threads son útiles principalmente para manejar muchas tareas concurrentes, especialmente cuando las tareas pasan tiempo esperando operaciones de I/O.
+
 13. What trade-offs remain even when virtual threads are lightweight?
+
+   RTA: Aunque los virtual threads son ligeros, todavía introducen costos de planificación y coordinación, y las tareas intensivas en CPU siguen limitadas por los núcleos disponibles del procesador.
 
 ### 15.4 Architectural decision
 
