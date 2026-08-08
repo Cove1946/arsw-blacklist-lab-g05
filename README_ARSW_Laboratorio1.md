@@ -584,7 +584,8 @@ The conclusion must include:
 
 ### Team conclusion
 
-> Replace this text with the team conclusion.
+> Lo que pudimos apreciar durante todo el laboratorio es que l caso analizado está dominado por operaciones bloqueantes: consultar un proveedor consiste casi por completo en esperar una respuesta. Antes de medir rendimiento verificamos la equivalencia funcional con 23 pruebas automatizadas y 50 corridas registradas, en las que las tres estrategias reportaron los mismos siete proveedores y los 100 consultados. Ninguna implementación necesitó locks: cada tarea devuelve su propio resultado y la consolidación ocurre en un solo hilo, de modo que las condiciones de carrera se eliminan por diseño y no por sincronización.
+> Nosotros recomendamos virtual threads para cargas dominadas por llamadas externas bloqueantes, y ejecución secuencial para trabajo local y breve. El pool fijo sigue siendo preferible cuando se necesita limitar explícitamente la concurrencia hacia un servicio externo, porque los virtual threads pierden ese backpressure implícito; a ello se suma el riesgo de pinning en Java 21 dentro de bloques synchronized.
 
 ---
 
@@ -594,9 +595,9 @@ Each student must add an individual conclusion of 80 to 120 words.
 
 ### Student 1
 
-**Name:** Pending
+**Name:** Juan Tellez
 
-> Replace this text with the individual conclusion.
+>  El hecho de Implementar VirtualThreadBlackListSearch me mostró que la ganancia de los virtual threads no viene de calcular más rápido, sino de que esperar deja de costar recursos. Con I/O simulado pasamos de 11.124 ms a aproximadamente 199 ms, porque la estrategia paga la espera más larga en lugar de la suma de todas. Sin la simulacion I/O resultó ser mucho más lenta que la secuencial, lo que me enseñó que la concurrencia solo conviene cuando el trabajo está dominado por bloqueos. En el diseño, devolver el resultado desde cada tarea con invokeAll en vez de compartir una colección eliminó el riesgo de race conditions por construcción, no por sincronización.
 
 ### Student 2
 
@@ -666,7 +667,7 @@ commands used, and [results/results.csv](results/results.csv) for the raw per-ru
 
 | Student           | GitHub username | Main contribution             | Relevant commits |
 |-------------------|-|-------------------------------|--|
-| Pending           | Pending | Pending                       | Pending |
+| Juan Tellez          | JuanTellez125 | Implementacion de Virtual Threads y los test                     | ![CommitTellez](docs/CommitTellez.png) |
 | Cristian Guerrero | Cove1946 | Implementacion de Thread Pool | ![img.png](docs/CommitCove.png) |
 | Mariana Parra     | marianaparraurrego-oss| Implementacion de benchmark   |![Commit.png](docs/Commit.png) |
 
@@ -795,6 +796,7 @@ Complete the following table:
 |------|---------|----------------------------|----------------------|--------------------------|
 |Claude Code| Apoyo en implementación, ejecución del benchmark y documentación|Se usó como asistente de programación durante la extensión de BenchmarkRunner (punto 4), la ejecución de las 10 configuraciones del benchmark (punto 5)|Se ejecutó mvn clean test; se verificó manualmente que las tres estrategias produjeran los mismos resultados funcionales (matches/consulted_providers) antes de reportar cualquier tiempo; se cruzaron los datos del CSV contra los logs de consola|El equipo revisó y modificó el código antes de commitear y validó que cada número reportado correspondiera a una ejecución real|
 |Claude Code| Revisión de redacción del análisis (secciones 15.1 y 15.2)|Revisión de contenido y ortografía sobre los borradores del equipo en 15.1 pregunta 3 y 15.2 pregunta 5; apoyo de redacción en 15.2 preguntas 7 a 9 a partir de la salida de `mvn exec:java`|El equipo ejecutó cada configuración del benchmark y aportó la salida de consola; se recalcularon los speedup contra la línea base secuencial y se descartó una eficiencia superlineal de 100.9 % causada por mezclar corridas de sesiones distintas|Se conservaron los valores de `results/results.csv` sobre las corridas nuevas por coherencia con la tabla de la sección 14; se recortó y ajustó la redacción final|
+|Claude Code| Apoyo en el diseño e implementación de `VirtualThreadBlackListSearch` (tarea 2)|Se usó como mentor técnico: primero analizó los requisitos del §8 y los riesgos de concurrencia (race conditions, visibilidad de memoria, pinning, interrupción), y luego comparó las alternativas de diseño sin elegir por el equipo: idioma de recolección (`invokeAll` frente a bucle de `submit`+`Future` frente a colección concurrente compartida), cierre del executor (`try-with-resources` frente a `shutdown()` en `finally`) y política de errores (fail-fast frente a tolerante). El equipo eligió cada opción y solicitó la justificación línea por línea antes de aceptar el código|Se ejecutó `mvn clean test`; se comprobó equivalencia funcional contra `SequentialBlackListSearch` en las cuatro dimensiones del §9 (identificadores, cantidad, clasificación y proveedores consultados); se verificó determinismo en diez ejecuciones consecutivas, ausencia de duplicados, orden ascendente y las validaciones de entrada (`NullPointerException` e `IllegalArgumentException`); se contrastó con el benchmark con y sin I/O simulado|El equipo tomó las tres decisiones de diseño, revisó la justificación de cada bloque de código y realizó el commit `6a4d329`. Se descartó `StructuredTaskScope` por ser *preview* en Java 21 y por la restricción explícita del §8 de usar `Executors.newVirtualThreadPerTaskExecutor()`|
 Requirements:
 
 - Do not submit code that the team cannot explain.
