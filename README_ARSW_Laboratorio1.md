@@ -511,7 +511,7 @@ Answer every question with evidence from the experiment.
    - RTA: En el escenario con I/O simulado el tiempo promedio bajo de 5513,495 ms a 2826,729 ms y el el speedup subió de 2.02 a 3.94, mostrandonos una clara mejora al duplicar los hilos al hacer esto tambien se duplican la cantidad de proveedores consultados en paralelo.
 
    
-   ![img.png](docs/img.png)
+   ![img.png](docs/CommitCove.png)
 
    ![img_1.png](docs/img_1.png)
    
@@ -600,9 +600,10 @@ Each student must add an individual conclusion of 80 to 120 words.
 
 ### Student 2
 
-**Name:** Pending
+**Name:** Cristian Guerrero
 
-> Replace this text with the individual conclusion.
+> Implemente la estrategia de pool fijo paso a paso, la creación del executor, el envío de las cien tareas, la recolección de resultados y el cierre correcto. Lo que mas me sorprendio fue darme cuenta de que no necesité ningún lock: al hacer que cada tarea devolviera su propio resultado y consolidarlo despues en un solo hilo, las condiciones de carrera simplemente desaparecieron. Tambien cai en cuenta 
+> que duplicar los hilos nunca duplicara el rendimiento, y sobre todo que sin I/O simulado el pool de ocho hilos podria llegar a ser mas lento que el secuencial. Entendí que la concurrencia no acelera el trabajo, solo superpone esperas, y por eso sin bloqueo real no aporta nada.
 
 ### Student 3
 
@@ -663,11 +664,11 @@ commands used, and [results/results.csv](results/results.csv) for the raw per-ru
 
 ## 20. Team members and contribution evidence
 
-| Student       | GitHub username | Main contribution           | Relevant commits |
-|---------------|-|-----------------------------|--|
-| Pending       | Pending | Pending                     | Pending |
-| Pending       | Pending | Pending                     | Pending |
-| Mariana Parra | marianaparraurrego-oss| Implementacion de benchmark | ![img.png](docs/Commit.pn|
+| Student           | GitHub username | Main contribution             | Relevant commits |
+|-------------------|-|-------------------------------|--|
+| Pending           | Pending | Pending                       | Pending |
+| Cristian Guerrero | Cove1946 | Implementacion de Thread Pool | ![img.png](docs/CommitCove.png) |
+| Mariana Parra     | marianaparraurrego-oss| Implementacion de benchmark   |![Commit.png](docs/Commit.png) |
 
 Each student must have at least two meaningful commits.
 
@@ -793,8 +794,7 @@ Complete the following table:
 | Tool | Purpose | Main prompts or activities | Validation performed | Changes made by the team |
 |------|---------|----------------------------|----------------------|--------------------------|
 |Claude Code| Apoyo en implementación, ejecución del benchmark y documentación|Se usó como asistente de programación durante la extensión de BenchmarkRunner (punto 4), la ejecución de las 10 configuraciones del benchmark (punto 5)|Se ejecutó mvn clean test; se verificó manualmente que las tres estrategias produjeran los mismos resultados funcionales (matches/consulted_providers) antes de reportar cualquier tiempo; se cruzaron los datos del CSV contra los logs de consola|El equipo revisó y modificó el código antes de commitear y validó que cada número reportado correspondiera a una ejecución real|
-| Pending | Pending | Pending | Pending | Pending |
-
+|Claude Code| Revisión de redacción del análisis (secciones 15.1 y 15.2)|Revisión de contenido y ortografía sobre los borradores del equipo en 15.1 pregunta 3 y 15.2 pregunta 5; apoyo de redacción en 15.2 preguntas 7 a 9 a partir de la salida de `mvn exec:java`|El equipo ejecutó cada configuración del benchmark y aportó la salida de consola; se recalcularon los speedup contra la línea base secuencial y se descartó una eficiencia superlineal de 100.9 % causada por mezclar corridas de sesiones distintas|Se conservaron los valores de `results/results.csv` sobre las corridas nuevas por coherencia con la tabla de la sección 14; se recortó y ajustó la redacción final|
 Requirements:
 
 - Do not submit code that the team cannot explain.
