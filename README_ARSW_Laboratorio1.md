@@ -511,14 +511,14 @@ Answer every question with evidence from the experiment.
    - RTA: En el escenario con I/O simulado el tiempo promedio bajo de 5513,495 ms a 2826,729 ms y el el speedup subió de 2.02 a 3.94, mostrandonos una clara mejora al duplicar los hilos al hacer esto tambien se duplican la cantidad de proveedores consultados en paralelo.
 
    
-   ![img.png](img.png)
+   ![img.png](docs/img.png)
 
-   ![img_1.png](img_1.png)
+   ![img_1.png](docs/img_1.png)
    
    6. What changed when the pool increased from 4 to 8 threads?
    - RTA: En el escenario con I/O simulado el tiempo promedio bajo de 2826,729 ms a 1470,262 ms y el el speedup subió de 3.94 a 7.57. La tendencia que vimos anteriormente se mantiene porque los 8 hilos siguen estando por debajo de los 16 procesadores logicos de la maquina.   
    
-   ![img_2.png](img_2.png)
+   ![img_2.png](docs/img_2.png)
    
 7. Was the improvement proportional to the number of threads? Explain.
    - RTA: Fue casi proporcional pero sublineal, De 2 a 4 hilos el tiempo pasO de 5513.495 ms a 2826.729 ms y de 4 a 8 pasó a 1470.262 ms, es decir que cada hilo adicional aporta menos que el anterior. Una causa principal es que las latencias de los proveedores van de 20 ms a 200 ms según ProviderFactory, así que el tiempo total lo define el hilo que termina último y no el promedio.
@@ -554,10 +554,16 @@ Answer every question with evidence from the experiment.
 ### 15.4 Architectural decision
 
 14. Which strategy would the team recommend for a system dominated by blocking external calls?
+   - RTA: Recomendamos virtual threads. Cuando el programa pasa la mayoría del tiempo esperando respuestas externas (APIs, bases de datos), lo que importa es sostener muchas esperas al mismo tiempo sin gastar muchos recursos.
 15. Which strategy would the team recommend for a small local workload?
+   - RTA: Recomendamos secuencial. Si el trabajo es rápido y no hay que esperar nada externo, crear hilos o tareas paralelas cuesta más tiempo.
 16. Under what conditions would a fixed pool still be preferable?
+   - RTA: Un pool fijo es preferible cuando queremos controlar cuántas tareas corren al mismo tiempo o cuando el trabajo usa mucho el procesador en vez de esperar.
 17. What evidence from the measurements supports the recommendation?
+   - RTA: Con latencia simulada, el speedup escaló casi de forma proporcional al número de hilos y se disparó con virtual threads:
+   ![comparacion.png](docs/Comparacion.png)
 18. What limitations prevent generalizing the conclusion to every production system?
+   -RTA: Aunque los resultados fueron claros, el experimento tuvo algunas limitaciones. Simulamos la espera con Thread.sleep, hicimos las pruebas en una sola máquina y solo realizamos cinco corridas por cada caso. Además, evaluamos únicamente tareas de espera y no escenarios de alta carga o trabajo intensivo de CPU, por lo que en un entorno real los resultados podrían ser diferentes.
 
 Answers such as “virtual threads are better” or “more threads are faster” are insufficient without conditions and evidence.
 
@@ -600,9 +606,11 @@ Each student must add an individual conclusion of 80 to 120 words.
 
 ### Student 3
 
-**Name:** Pending
+**Name:** Mariana Parra
 
-> Replace this text with the individual conclusion.
+> Lo primero que entendí fue que antes de comparar el rendimiento era necesario asegurarme de que todas las estrategias dieran el mismo resultado. Porque de nada sirve que una versión sea más rápida si al final entrega resultados incorrectos por un problema de concurrencia. Primero tenía que validar que todas encontraran exactamente los mismos proveedores en lista negra y, ya después, comparar los tiempos.
+
+> También me quedó muy claro por qué los resultados fueron diferentes. Los hilos virtuales funcionan muy bien cuando las tareas pasan la mayor parte del tiempo esperando, como una respuesta de red, porque mientras esperan no bloquean un hilo del sistema. En cambio, cuando el trabajo es rápido y se hace localmente, el costo de crear y coordinar los hilos termina siendo mayor que el beneficio, por eso en ese caso la versión secuencial fue la más rápida. Al final entendí que no existe una estrategia que siempre sea la mejor; todo depende del tipo de trabajo que se quiera ejecutar.
 
 ---
 
@@ -655,11 +663,11 @@ commands used, and [results/results.csv](results/results.csv) for the raw per-ru
 
 ## 20. Team members and contribution evidence
 
-| Student | GitHub username | Main contribution | Relevant commits |
-|---|---|---|---|
-| Pending | Pending | Pending | Pending |
-| Pending | Pending | Pending | Pending |
-| Pending | Pending | Pending | Pending |
+| Student       | GitHub username | Main contribution           | Relevant commits |
+|---------------|-|-----------------------------|--|
+| Pending       | Pending | Pending                     | Pending |
+| Pending       | Pending | Pending                     | Pending |
+| Mariana Parra | marianaparraurrego-oss| Implementacion de benchmark | ![img.png](docs/Commit.pn|
 
 Each student must have at least two meaningful commits.
 
@@ -783,7 +791,8 @@ AI tools may be used as support, but every student must understand and defend th
 Complete the following table:
 
 | Tool | Purpose | Main prompts or activities | Validation performed | Changes made by the team |
-|---|---|---|---|---|
+|------|---------|----------------------------|----------------------|--------------------------|
+|Claude Code| Apoyo en implementación, ejecución del benchmark y documentación|Se usó como asistente de programación durante la extensión de BenchmarkRunner (punto 4), la ejecución de las 10 configuraciones del benchmark (punto 5)|Se ejecutó mvn clean test; se verificó manualmente que las tres estrategias produjeran los mismos resultados funcionales (matches/consulted_providers) antes de reportar cualquier tiempo; se cruzaron los datos del CSV contra los logs de consola|El equipo revisó y modificó el código antes de commitear y validó que cada número reportado correspondiera a una ejecución real|
 | Pending | Pending | Pending | Pending | Pending |
 
 Requirements:
