@@ -445,16 +445,16 @@ Complete this table with actual measurements:
 
 | Scenario | Strategy | Pool size | Average ms | Minimum ms | Maximum ms | Speedup | Matches | Consulted |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| No simulated I/O | Sequential | — | Pending | Pending | Pending | 1.00 | Pending | Pending |
-| No simulated I/O | Fixed pool | 2 | Pending | Pending | Pending | Pending | Pending | Pending |
-| No simulated I/O | Fixed pool | 4 | Pending | Pending | Pending | Pending | Pending | Pending |
-| No simulated I/O | Fixed pool | 8 | Pending | Pending | Pending | Pending | Pending | Pending |
-| No simulated I/O | Virtual threads | — | Pending | Pending | Pending | Pending | Pending | Pending |
-| Simulated I/O | Sequential | — | Pending | Pending | Pending | 1.00 | Pending | Pending |
-| Simulated I/O | Fixed pool | 2 | Pending | Pending | Pending | Pending | Pending | Pending |
-| Simulated I/O | Fixed pool | 4 | Pending | Pending | Pending | Pending | Pending | Pending |
-| Simulated I/O | Fixed pool | 8 | Pending | Pending | Pending | Pending | Pending | Pending |
-| Simulated I/O | Virtual threads | — | Pending | Pending | Pending | Pending | Pending | Pending |
+| No simulated I/O | Sequential | — | 0.020 | 0.014 | 0.029 | 1.00 | 7 | 100 |
+| No simulated I/O | Fixed pool | 2 | 0.505 | 0.380 | 0.668 | 0.04 | 7 | 100 |
+| No simulated I/O | Fixed pool | 4 | 0.566 | 0.473 | 0.650 | 0.04 | 7 | 100 |
+| No simulated I/O | Fixed pool | 8 | 1.223 | 0.663 | 2.824 | 0.02 | 7 | 100 |
+| No simulated I/O | Virtual threads | — | 0.721 | 0.464 | 0.905 | 0.03 | 7 | 100 |
+| Simulated I/O | Sequential | — | 11124.252 | 11020.956 | 11500.182 | 1.00 | 7 | 100 |
+| Simulated I/O | Fixed pool | 2 | 5597.677 | 5504.754 | 5846.998 | 1.99 | 7 | 100 |
+| Simulated I/O | Fixed pool | 4 | 3006.012 | 2993.078 | 3018.336 | 3.70 | 7 | 100 |
+| Simulated I/O | Fixed pool | 8 | 1558.112 | 1550.568 | 1562.532 | 7.14 | 7 | 100 |
+| Simulated I/O | Virtual threads | — | 199.278 | 198.660 | 200.603 | 55.82 | 7 | 100 |
 
 Also include the raw measurements in:
 
@@ -481,32 +481,89 @@ Answer every question with evidence from the experiment.
 ### 15.1 Correctness
 
 1. How did the team verify that the three strategies produce equivalent results?
+
+   - RTA: Nosotros hicimos la verficaciones mediante pruebas automatizadas donde la respuesta base es la estrategia SEQUENTIAL, donde se prueba la misma IP, warmups y measuredRuns finalmente comparando las respuestas. Tambien, se hicieron 50 ejecuciones medidas que se registraron en results/results.csv.
+
+   ![Results](docs/Results.png)
+   ![Test](docs/Test.png)
+
 2. Why can concurrent tasks return matches in a different order?
+
+   - RTA: Para responder esta pregunta es importante distinguir entre dos conceptos: el orden de finalizacion es no deterministico por naturaleza, per el orde de recoleccion es una decision de diseño. Ambas implementaciones concurrentes cosechan los resultados recorriendo los Future en el orden en que se enviaron las tareas e invokeAl;l garantiza por contrato que devuelve los futures en el orden de la coleccion de entrada, de este modo, la variabilidad de finalizacion queda contenida dentro del executor.
+
+
+   ![Sequential](docs/Sequential.png)
+   ![Fixed](docs/Fixed.png)
+   ![Virtual](docs/Virtual.png)
+
 3. What mechanism or design prevented lost or duplicated matches?
+
+   - RTA: Para evitar las perdidas y duplicados, se elimino el estado mutable compartido donde cada proveedor se encapsula en una tarea independiente cuyo Callable devuelve su propio resultado, asi ningun hilo escribe sobre una coleccion comun evitando asi alguna condicion de carrera. La consolidacion ocurre en un solo hilo el cual invoca serch() leyendo cada future exactamente una vez con get(), al ser una relacion 1 a 1  (proveedor → tarea → Future)  se recorren todos y no se puede omitir o duplicar ninguno. 
+
 4. Why should performance not be compared before proving functional equivalence?
+
+   - RTA: Primero era importante comprobar que todas las estrategias dieran el mismo resultado correcto. No tendría sentido decir que una es más rápida si al mismo tiempo tiene errores de concurrencia, porque aunque se ejecute en menos tiempo, el resultado no sería confiable
+   
 
 ### 15.2 Fixed thread pool
 
 5. What changed when the pool increased from 2 to 4 threads?
-6. What changed when the pool increased from 4 to 8 threads?
+   - RTA: En el escenario con I/O simulado el tiempo promedio bajo de 5513,495 ms a 2826,729 ms y el el speedup subió de 2.02 a 3.94, mostrandonos una clara mejora al duplicar los hilos al hacer esto tambien se duplican la cantidad de proveedores consultados en paralelo.
+
+   
+   ![img.png](docs/CommitCove.png)
+
+   ![img_1.png](docs/img_1.png)
+   
+   6. What changed when the pool increased from 4 to 8 threads?
+   - RTA: En el escenario con I/O simulado el tiempo promedio bajo de 2826,729 ms a 1470,262 ms y el el speedup subió de 3.94 a 7.57. La tendencia que vimos anteriormente se mantiene porque los 8 hilos siguen estando por debajo de los 16 procesadores logicos de la maquina.   
+   
+   ![img_2.png](docs/img_2.png)
+   
 7. Was the improvement proportional to the number of threads? Explain.
+   - RTA: Fue casi proporcional pero sublineal, De 2 a 4 hilos el tiempo pasO de 5513.495 ms a 2826.729 ms y de 4 a 8 pasó a 1470.262 ms, es decir que cada hilo adicional aporta menos que el anterior. Una causa principal es que las latencias de los proveedores van de 20 ms a 200 ms según ProviderFactory, así que el tiempo total lo define el hilo que termina último y no el promedio.
+   
 8. What costs are introduced by task creation, scheduling, context switching, and result consolidation?
+
+   - RTA: El escenario sin I/O aisla esos costos, porque el trabajo util es identico al secuencial: 0.020 ms secuencial frente a 1.223 ms con pool de 8 son unos 1.2 ms de sobrecosto puro. Ese costo viene de crear los hilos de plataforma del pool, de instanciar 100 Callable y 100 FutureTask, de la contención sobre el lock de la única BlockingQueue del pool con park/unpark que rompe la localidad de caché, y de recorrer los 100 Future con get(). Con I/O simulado ese mismo 1.2 ms es despreciable frente a los 1470.262 ms medidos con 8 hilos: el sobrecosto no cambia, cambia su peso relativo.
+
 9. What would happen if the pool size were much larger than the available platform threads?
+
+   - RTA: Depende de la carga, con trabajo bloqueante seguiria mejorando hasta acercarse a las 100 tareas, porque un hilo dormido en Thread.sleep() no consume CPU y el limite no son los nucleos sino las esperas simultáneas; los hilos virtuales lo confirman al caer a 199.278 ms con 100 tareas concurrentes. Pero 100 hilos de plataforma son cerca de 100 MB solo en pilas, con trabajo intensivo en CPU la sobresuscripcion es perdida neta: solo hay 16 procesadores logicos y los hilos extra unicamente agregan cambios de contexto, degradacion que el escenario sin I/O ya muestra al pasar de 2 a 8 hilos. Un pool mucho mayor que los hilos disponibles indica que la herramienta correcta son los hilos virtuales.
 
 ### 15.3 Virtual threads
 
 10. In which scenario did virtual threads provide the clearest benefit?
+
+   RTA: En el escenario en el que vimos mas claro el beneficio de usar los virtual threads fue al hacer las 50 ejecuciones, en results/results.md donde los virtual threads promediaron 199,278ms frente a 11.124,252ms de la estrategia secuencial y frente a 1.588,112ms del mejor pool fijo (8 hilos).
+
+   
+
 11. Why are virtual threads especially relevant for blocking operations?
+
+   RTA: Porque un virtual thread bloqueado no retiene un hilo del sistema operativo. Cuando ejecuta una operación bloqueante instrumentada por la JVM (Thread.sleep, I/O de red, esperas de socket), la JVM copia su pila al heap y lo desmonta de su carrier thread, dejando ese hilo plataforma libre para ejecutar otra tarea. Cuando la espera termina, el virtual thread se remonta sobre cualquier carrier disponible y continúa.
+
 12. Why do virtual threads not make local CPU work automatically faster?
+
+   RTA: Los virtual threads no hacen que el trabajo local de CPU sea automáticamente más rápido porque no aumentan la capacidad de procesamiento del CPU. Los virtual threads son útiles principalmente para manejar muchas tareas concurrentes, especialmente cuando las tareas pasan tiempo esperando operaciones de I/O.
+
 13. What trade-offs remain even when virtual threads are lightweight?
+
+   RTA: Aunque los virtual threads son ligeros, todavía introducen costos de planificación y coordinación, y las tareas intensivas en CPU siguen limitadas por los núcleos disponibles del procesador.
 
 ### 15.4 Architectural decision
 
 14. Which strategy would the team recommend for a system dominated by blocking external calls?
+   - RTA: Recomendamos virtual threads. Cuando el programa pasa la mayoría del tiempo esperando respuestas externas (APIs, bases de datos), lo que importa es sostener muchas esperas al mismo tiempo sin gastar muchos recursos.
 15. Which strategy would the team recommend for a small local workload?
+   - RTA: Recomendamos secuencial. Si el trabajo es rápido y no hay que esperar nada externo, crear hilos o tareas paralelas cuesta más tiempo.
 16. Under what conditions would a fixed pool still be preferable?
+   - RTA: Un pool fijo es preferible cuando queremos controlar cuántas tareas corren al mismo tiempo o cuando el trabajo usa mucho el procesador en vez de esperar.
 17. What evidence from the measurements supports the recommendation?
+   - RTA: Con latencia simulada, el speedup escaló casi de forma proporcional al número de hilos y se disparó con virtual threads:
+   ![comparacion.png](docs/Comparacion.png)
 18. What limitations prevent generalizing the conclusion to every production system?
+   -RTA: Aunque los resultados fueron claros, el experimento tuvo algunas limitaciones. Simulamos la espera con Thread.sleep, hicimos las pruebas en una sola máquina y solo realizamos cinco corridas por cada caso. Además, evaluamos únicamente tareas de espera y no escenarios de alta carga o trabajo intensivo de CPU, por lo que en un entorno real los resultados podrían ser diferentes.
 
 Answers such as “virtual threads are better” or “more threads are faster” are insufficient without conditions and evidence.
 
@@ -527,7 +584,8 @@ The conclusion must include:
 
 ### Team conclusion
 
-> Replace this text with the team conclusion.
+> Lo que pudimos apreciar durante todo el laboratorio es que l caso analizado está dominado por operaciones bloqueantes: consultar un proveedor consiste casi por completo en esperar una respuesta. Antes de medir rendimiento verificamos la equivalencia funcional con 23 pruebas automatizadas y 50 corridas registradas, en las que las tres estrategias reportaron los mismos siete proveedores y los 100 consultados. Ninguna implementación necesitó locks: cada tarea devuelve su propio resultado y la consolidación ocurre en un solo hilo, de modo que las condiciones de carrera se eliminan por diseño y no por sincronización.
+> Nosotros recomendamos virtual threads para cargas dominadas por llamadas externas bloqueantes, y ejecución secuencial para trabajo local y breve. El pool fijo sigue siendo preferible cuando se necesita limitar explícitamente la concurrencia hacia un servicio externo, porque los virtual threads pierden ese backpressure implícito; a ello se suma el riesgo de pinning en Java 21 dentro de bloques synchronized.
 
 ---
 
@@ -537,21 +595,24 @@ Each student must add an individual conclusion of 80 to 120 words.
 
 ### Student 1
 
-**Name:** Pending
+**Name:** Juan Tellez
 
-> Replace this text with the individual conclusion.
+>  El hecho de Implementar VirtualThreadBlackListSearch me mostró que la ganancia de los virtual threads no viene de calcular más rápido, sino de que esperar deja de costar recursos. Con I/O simulado pasamos de 11.124 ms a aproximadamente 199 ms, porque la estrategia paga la espera más larga en lugar de la suma de todas. Sin la simulacion I/O resultó ser mucho más lenta que la secuencial, lo que me enseñó que la concurrencia solo conviene cuando el trabajo está dominado por bloqueos. En el diseño, devolver el resultado desde cada tarea con invokeAll en vez de compartir una colección eliminó el riesgo de race conditions por construcción, no por sincronización.
 
 ### Student 2
 
-**Name:** Pending
+**Name:** Cristian Guerrero
 
-> Replace this text with the individual conclusion.
+> Implemente la estrategia de pool fijo paso a paso, la creación del executor, el envío de las cien tareas, la recolección de resultados y el cierre correcto. Lo que mas me sorprendio fue darme cuenta de que no necesité ningún lock: al hacer que cada tarea devolviera su propio resultado y consolidarlo despues en un solo hilo, las condiciones de carrera simplemente desaparecieron. Tambien cai en cuenta 
+> que duplicar los hilos nunca duplicara el rendimiento, y sobre todo que sin I/O simulado el pool de ocho hilos podria llegar a ser mas lento que el secuencial. Entendí que la concurrencia no acelera el trabajo, solo superpone esperas, y por eso sin bloqueo real no aporta nada.
 
 ### Student 3
 
-**Name:** Pending
+**Name:** Mariana Parra
 
-> Replace this text with the individual conclusion.
+> Lo primero que entendí fue que antes de comparar el rendimiento era necesario asegurarme de que todas las estrategias dieran el mismo resultado. Porque de nada sirve que una versión sea más rápida si al final entrega resultados incorrectos por un problema de concurrencia. Primero tenía que validar que todas encontraran exactamente los mismos proveedores en lista negra y, ya después, comparar los tiempos.
+
+> También me quedó muy claro por qué los resultados fueron diferentes. Los hilos virtuales funcionan muy bien cuando las tareas pasan la mayor parte del tiempo esperando, como una respuesta de red, porque mientras esperan no bloquean un hilo del sistema. En cambio, cuando el trabajo es rápido y se hace localmente, el costo de crear y coordinar los hilos termina siendo mayor que el beneficio, por eso en ese caso la versión secuencial fue la más rápida. Al final entendí que no existe una estrategia que siempre sea la mejor; todo depende del tipo de trabajo que se quiera ejecutar.
 
 ---
 
@@ -589,23 +650,26 @@ Complete:
 
 | Item | Value |
 |---|---|
-| Operating system | Pending |
-| CPU model | Pending |
-| Logical processors | Pending |
-| RAM | Pending |
-| JDK vendor and version | Pending |
-| Maven version | Pending |
-| Measurement date | Pending |
+| Operating system | Microsoft Windows 11 Home Single Language 64-bit (Build 26200) |
+| CPU model | AMD Ryzen 7 7730U with Radeon Graphics |
+| Logical processors | 16 (8 physical cores) |
+| RAM | 15.34 GB |
+| JDK vendor and version | Oracle Corporation, JDK 21.0.9+7-LTS |
+| Maven version | Apache Maven 3.9.12 |
+| Measurement date | 2026-08-07 |
+
+See [results/environment.md](results/environment.md) for full methodology notes and the exact
+commands used, and [results/results.csv](results/results.csv) for the raw per-run measurements.
 
 ---
 
 ## 20. Team members and contribution evidence
 
-| Student | GitHub username | Main contribution | Relevant commits |
-|---|---|---|---|
-| Pending | Pending | Pending | Pending |
-| Pending | Pending | Pending | Pending |
-| Pending | Pending | Pending | Pending |
+| Student           | GitHub username | Main contribution             | Relevant commits |
+|-------------------|-|-------------------------------|--|
+| Juan Tellez          | JuanTellez125 | Implementacion de Virtual Threads y los test                     | ![CommitTellez](docs/CommitTellez.png) |
+| Cristian Guerrero | Cove1946 | Implementacion de Thread Pool | ![img.png](docs/CommitCove.png) |
+| Mariana Parra     | marianaparraurrego-oss| Implementacion de benchmark   |![Commit.png](docs/Commit.png) |
 
 Each student must have at least two meaningful commits.
 
@@ -729,9 +793,10 @@ AI tools may be used as support, but every student must understand and defend th
 Complete the following table:
 
 | Tool | Purpose | Main prompts or activities | Validation performed | Changes made by the team |
-|---|---|---|---|---|
-| Pending | Pending | Pending | Pending | Pending |
-
+|------|---------|----------------------------|----------------------|--------------------------|
+|Claude Code| Apoyo en implementación, ejecución del benchmark y documentación|Se usó como asistente de programación durante la extensión de BenchmarkRunner (punto 4), la ejecución de las 10 configuraciones del benchmark (punto 5)|Se ejecutó mvn clean test; se verificó manualmente que las tres estrategias produjeran los mismos resultados funcionales (matches/consulted_providers) antes de reportar cualquier tiempo; se cruzaron los datos del CSV contra los logs de consola|El equipo revisó y modificó el código antes de commitear y validó que cada número reportado correspondiera a una ejecución real|
+|Claude Code| Revisión de redacción del análisis (secciones 15.1 y 15.2)|Revisión de contenido y ortografía sobre los borradores del equipo en 15.1 pregunta 3 y 15.2 pregunta 5; apoyo de redacción en 15.2 preguntas 7 a 9 a partir de la salida de `mvn exec:java`|El equipo ejecutó cada configuración del benchmark y aportó la salida de consola; se recalcularon los speedup contra la línea base secuencial y se descartó una eficiencia superlineal de 100.9 % causada por mezclar corridas de sesiones distintas|Se conservaron los valores de `results/results.csv` sobre las corridas nuevas por coherencia con la tabla de la sección 14; se recortó y ajustó la redacción final|
+|Claude Code| Apoyo en el diseño e implementación de `VirtualThreadBlackListSearch` (tarea 2)|Se usó como mentor técnico: primero analizó los requisitos del §8 y los riesgos de concurrencia (race conditions, visibilidad de memoria, pinning, interrupción), y luego comparó las alternativas de diseño sin elegir por el equipo: idioma de recolección (`invokeAll` frente a bucle de `submit`+`Future` frente a colección concurrente compartida), cierre del executor (`try-with-resources` frente a `shutdown()` en `finally`) y política de errores (fail-fast frente a tolerante). El equipo eligió cada opción y solicitó la justificación línea por línea antes de aceptar el código|Se ejecutó `mvn clean test`; se comprobó equivalencia funcional contra `SequentialBlackListSearch` en las cuatro dimensiones del §9 (identificadores, cantidad, clasificación y proveedores consultados); se verificó determinismo en diez ejecuciones consecutivas, ausencia de duplicados, orden ascendente y las validaciones de entrada (`NullPointerException` e `IllegalArgumentException`); se contrastó con el benchmark con y sin I/O simulado|El equipo tomó las tres decisiones de diseño, revisó la justificación de cada bloque de código y realizó el commit `6a4d329`. Se descartó `StructuredTaskScope` por ser *preview* en Java 21 y por la restricción explícita del §8 de usar `Executors.newVirtualThreadPerTaskExecutor()`|
 Requirements:
 
 - Do not submit code that the team cannot explain.

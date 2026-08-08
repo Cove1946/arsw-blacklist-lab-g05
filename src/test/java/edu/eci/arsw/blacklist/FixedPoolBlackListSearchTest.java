@@ -1,0 +1,45 @@
+package edu.eci.arsw.blacklist;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+class FixedPoolBlackListSearchTest {
+    private static final String IP_ADDRESS = "202.24.34.55";
+    private static final int ALARM_THRESHOLD = 5;
+    private static final int PROVIDER_COUNT = 100;
+
+    private final List<BlackListProvider> providers = ProviderFactory.create(PROVIDER_COUNT, false);
+    private final SearchResult baseline = new SequentialBlackListSearch(providers).search(IP_ADDRESS, ALARM_THRESHOLD);
+
+    @Test
+    void poolOfTwoShouldReturnSameProviderIdsAsSequentialBaseline() {
+        SearchResult result = new FixedPoolBlackListSearch(providers, 2).search(IP_ADDRESS, ALARM_THRESHOLD);
+
+        assertEquals(baseline.matchingProviderIds(), result.matchingProviderIds());
+    }
+
+    @Test
+    void poolOfFourShouldReturnSameProviderIdsAsSequentialBaseline() {
+        SearchResult result = new FixedPoolBlackListSearch(providers, 4).search(IP_ADDRESS, ALARM_THRESHOLD);
+
+        assertEquals(baseline.matchingProviderIds(), result.matchingProviderIds());
+    }
+
+    @Test
+    void poolOfEightShouldReturnSameProviderIdsAsSequentialBaseline() {
+        SearchResult result = new FixedPoolBlackListSearch(providers, 8).search(IP_ADDRESS, ALARM_THRESHOLD);
+
+        assertEquals(baseline.matchingProviderIds(), result.matchingProviderIds());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1, Integer.MIN_VALUE})
+    void shouldRejectNonPositivePoolSize(int poolSize) {
+        assertThrows(IllegalArgumentException.class, () -> new FixedPoolBlackListSearch(providers, poolSize));
+    }
+}
