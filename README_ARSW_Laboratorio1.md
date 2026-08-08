@@ -482,14 +482,15 @@ Answer every question with evidence from the experiment.
 
 1. How did the team verify that the three strategies produce equivalent results?
 
-   RTA: Nosotros hicimos la verficaciones mediante pruebas automatizadas donde la respuesta base es la estrategia SEQUENTIAL, donde se prueba la misma IP, warmups y measuredRuns finalmente comparando las respuestas. Tambien, se hicieron 50 ejecuciones medidas que se registraron en results/results.csv.
+   - RTA: Nosotros hicimos la verficaciones mediante pruebas automatizadas donde la respuesta base es la estrategia SEQUENTIAL, donde se prueba la misma IP, warmups y measuredRuns finalmente comparando las respuestas. Tambien, se hicieron 50 ejecuciones medidas que se registraron en results/results.csv.
 
    ![Results](docs/Results.png)
    ![Test](docs/Test.png)
 
 2. Why can concurrent tasks return matches in a different order?
 
-   RTA: Para responder esta pregunta es importante distinguir entre dos conceptos: el orden de finalizacion es no deterministico por naturaleza, per el orde de recoleccion es una decision de diseño. Ambas implementaciones concurrentes cosechan los resultados recorriendo los Future en el orden en que se enviaron las tareas e invokeAl;l garantiza por contrato que devuelve los futures en el orden de la coleccion de entrada, de este modo, la variabilidad de finalizacion queda contenida dentro del executor.
+   - RTA: Para responder esta pregunta es importante distinguir entre dos conceptos: el orden de finalizacion es no deterministico por naturaleza, per el orde de recoleccion es una decision de diseño. Ambas implementaciones concurrentes cosechan los resultados recorriendo los Future en el orden en que se enviaron las tareas e invokeAl;l garantiza por contrato que devuelve los futures en el orden de la coleccion de entrada, de este modo, la variabilidad de finalizacion queda contenida dentro del executor.
+
 
    ![Sequential](docs/Sequential.png)
    ![Fixed](docs/Fixed.png)
@@ -501,16 +502,34 @@ Answer every question with evidence from the experiment.
 
 4. Why should performance not be compared before proving functional equivalence?
 
-   RTA: Primero era importante comprobar que todas las estrategias dieran el mismo resultado correcto. No tendría sentido decir que una es más rápida si al mismo tiempo tiene errores de concurrencia, porque aunque se ejecute en menos tiempo, el resultado no sería confiable
+   - RTA: Primero era importante comprobar que todas las estrategias dieran el mismo resultado correcto. No tendría sentido decir que una es más rápida si al mismo tiempo tiene errores de concurrencia, porque aunque se ejecute en menos tiempo, el resultado no sería confiable
    
 
 ### 15.2 Fixed thread pool
 
 5. What changed when the pool increased from 2 to 4 threads?
-6. What changed when the pool increased from 4 to 8 threads?
+   - RTA: En el escenario con I/O simulado el tiempo promedio bajo de 5513,495 ms a 2826,729 ms y el el speedup subió de 2.02 a 3.94, mostrandonos una clara mejora al duplicar los hilos al hacer esto tambien se duplican la cantidad de proveedores consultados en paralelo.
+
+   
+   ![img.png](img.png)
+
+   ![img_1.png](img_1.png)
+   
+   6. What changed when the pool increased from 4 to 8 threads?
+   - RTA: En el escenario con I/O simulado el tiempo promedio bajo de 2826,729 ms a 1470,262 ms y el el speedup subió de 3.94 a 7.57. La tendencia que vimos anteriormente se mantiene porque los 8 hilos siguen estando por debajo de los 16 procesadores logicos de la maquina.   
+   
+   ![img_2.png](img_2.png)
+   
 7. Was the improvement proportional to the number of threads? Explain.
+   - RTA: Fue casi proporcional pero sublineal, De 2 a 4 hilos el tiempo pasO de 5513.495 ms a 2826.729 ms y de 4 a 8 pasó a 1470.262 ms, es decir que cada hilo adicional aporta menos que el anterior. Una causa principal es que las latencias de los proveedores van de 20 ms a 200 ms según ProviderFactory, así que el tiempo total lo define el hilo que termina último y no el promedio.
+   
 8. What costs are introduced by task creation, scheduling, context switching, and result consolidation?
+
+   - RTA: El escenario sin I/O aisla esos costos, porque el trabajo util es identico al secuencial: 0.020 ms secuencial frente a 1.223 ms con pool de 8 son unos 1.2 ms de sobrecosto puro. Ese costo viene de crear los hilos de plataforma del pool, de instanciar 100 Callable y 100 FutureTask, de la contención sobre el lock de la única BlockingQueue del pool con park/unpark que rompe la localidad de caché, y de recorrer los 100 Future con get(). Con I/O simulado ese mismo 1.2 ms es despreciable frente a los 1470.262 ms medidos con 8 hilos: el sobrecosto no cambia, cambia su peso relativo.
+
 9. What would happen if the pool size were much larger than the available platform threads?
+
+   - RTA: Depende de la carga, con trabajo bloqueante seguiria mejorando hasta acercarse a las 100 tareas, porque un hilo dormido en Thread.sleep() no consume CPU y el limite no son los nucleos sino las esperas simultáneas; los hilos virtuales lo confirman al caer a 199.278 ms con 100 tareas concurrentes. Pero 100 hilos de plataforma son cerca de 100 MB solo en pilas, con trabajo intensivo en CPU la sobresuscripcion es perdida neta: solo hay 16 procesadores logicos y los hilos extra unicamente agregan cambios de contexto, degradacion que el escenario sin I/O ya muestra al pasar de 2 a 8 hilos. Un pool mucho mayor que los hilos disponibles indica que la herramienta correcta son los hilos virtuales.
 
 ### 15.3 Virtual threads
 
